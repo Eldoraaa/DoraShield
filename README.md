@@ -178,16 +178,16 @@ DoraShield boots → initializes MPU6050 over I2C
 The core detection is a **total acceleration vector magnitude** check:
 
 ```cpp
-// Read accelerometer axes (m/s²)
-sensors_event_t accel, gyro, temp;
-mpu.getEvent(&accel, &gyro, &temp);
+// Read accelerometer, gyroscope, and temperature events
+sensors_event_t a, g, temp;
+mpu.getEvent(&a, &g, &temp);
 
-float ax = accel.acceleration.x;
-float ay = accel.acceleration.y;
-float az = accel.acceleration.z;
-
-// Compute resultant magnitude
-float totalAccel = sqrt(ax*ax + ay*ay + az*az);
+// Compute resultant acceleration magnitude across all three axes
+float totalAccel = sqrt(
+  a.acceleration.x * a.acceleration.x +
+  a.acceleration.y * a.acceleration.y +
+  a.acceleration.z * a.acceleration.z
+);
 
 // Threshold-based fall detection
 if (totalAccel > 15.0) {
@@ -255,16 +255,12 @@ Update the following constants in `FallDetection.ino` before flashing:
 
 ```cpp
 // ── Hardware Pins ─────────────────────────────────────────
-#define SDA_PIN       4       // MPU6050 I2C data
-#define SCL_PIN       5       // MPU6050 I2C clock
-#define BUZZER_PIN    3       // Active buzzer output
-
-// ── Detection Threshold ───────────────────────────────────
-#define FALL_THRESHOLD  15.0  // m/s² — tune after real-world testing
-
-// ── Serial Debug ──────────────────────────────────────────
-#define SERIAL_BAUD   115200
+#define I2C_SDA    4   // MPU6050 I2C data
+#define I2C_SCL    5   // MPU6050 I2C clock
+#define BUZZER_PIN 3   // Active buzzer output
 ```
+
+The fall detection threshold (`15.0 m/s²`) and serial baud rate (`115200`) are set inline in the `loop()` and `setup()` functions respectively. Update them directly in `FallDetection.ino` to suit your hardware and deployment environment.
 
 ---
 
@@ -312,100 +308,6 @@ cd dorashield
 
 ---
 
-## 🛠️ Troubleshooting
-
-<details>
-<summary><b>MPU6050 not found / I2C error on boot</b></summary>
-
-<br/>
-
-- Verify SDA and SCL wiring match `SDA_PIN` and `SCL_PIN` in `FallDetection.ino`
-- Confirm the MPU6050 module is powered (3.3V or 5V depending on your module's onboard regulator)
-- The MPU6050 default I2C address is `0x68` (AD0 pulled low). If AD0 is pulled high, the address is `0x69` — update the Adafruit library init call accordingly
-- Run an I2C scanner sketch to confirm the device is visible on the bus
-
-</details>
-
-<details>
-<summary><b>Buzzer not sounding during detected falls</b></summary>
-
-<br/>
-
-- Confirm `BUZZER_PIN` matches your wiring
-- Verify you are using an **active** buzzer (self-oscillating). A passive buzzer requires a PWM signal and will not work with simple `digitalWrite HIGH`
-- Check that the GPIO is not conflicting with a strapping pin on your ESP32 variant
-- Monitor Serial output — if "FALL DETECTED" prints but no sound, the buzzer or its wiring is the issue
-
-</details>
-
-<details>
-<summary><b>Too many false positives</b></summary>
-
-<br/>
-
-The threshold `15.0` may be too low for the wearer's typical activity level. To resolve:
-
-1. Open Serial Monitor
-2. Have the wearer perform all typical daily motions
-3. Record the maximum `totalAccel` seen during normal activity
-4. Set `FALL_THRESHOLD` to ~1.5–2× that maximum value
-5. Re-flash and retest
-
-</details>
-
-<details>
-<summary><b>Falls not being detected</b></summary>
-
-<br/>
-
-The threshold may be too high. Simulate a controlled fall (dropping the device from ~1m onto a cushion) and read the peak `totalAccel` from Serial Monitor. Set the threshold just below that peak value, then retest with the wearer.
-
-</details>
-
-<details>
-<summary><b>Serial Monitor shows garbled output</b></summary>
-
-<br/>
-
-Ensure the Serial Monitor baud rate matches `SERIAL_BAUD` in the firmware (`115200` by default). Mismatched baud rates produce unreadable output.
-
-</details>
-
----
-
-## 🚀 Roadmap
-
-- [ ] **TinyLSTM fall classifier** — replace threshold logic with a trained time-series model for higher precision and fewer false positives
-- [ ] **Free-fall pre-phase detection** — detect near-zero-g window before impact spike for earlier alert
-- [ ] **Gyroscope fusion** — incorporate angular velocity data into the detection decision
-- [ ] **BLE / Wi-Fi alert relay** — transmit fall events wirelessly to the ELDORA backend in real time
-- [ ] **Vibration motor feedback** — haptic confirmation to the wearer that an alert was triggered
-- [ ] **Low-power sleep mode** — deep sleep between samples to extend battery life
-
----
-
-## 🎓 Project Context
-
-<div align="center">
-
-Built for the
-
-### **Passage to ASEAN Hackathon 2026**
-
-*Top 10 Semi-Finalist — BINUS BM Team*
-
-</div>
-
-DoraShield is the **Protect** layer of **ELDORA**, a privacy-first elderly safety ecosystem designed for ASEAN aging populations. The full system follows the **Protect → Respond → Recover** framework:
-
-| Phase | Component | Role |
-|---|---|---|
-| 🛡️ **Protect** | **DoraShield** *(this repo)* | Fall detection wearable with threshold-based IMU analysis |
-| 🤖 **Respond** | DoraBot (ESP32-S3) | AI voice companion for real-time support |
-| 📱 **Recover** | ELDORA App | Caregiver dashboard with XGBoost + SHAP insights |
-
----
-
 ## 👥 Team
 
 <div align="center">
@@ -437,45 +339,12 @@ Have questions, want to collaborate, or interested in ELDORA?
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** — free to use, modify, and distribute.
-
-```
-MIT License
-
-Copyright (c) 2026 ELDORA — BINUS BM Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software.
-```
-
----
-
 <div align="center">
-
-**ELDORA Component Map**
-
-| Repository | Component | Status |
-|---|---|---|
-| `eldora-dorashield` | 🛡️ Fall detection wearable | ✅ This repo |
-| `eldora-dorabot` | 🤖 Voice companion firmware | 🔗 |
-| `eldora-app` | 📱 Caregiver mobile app | 🔗 |
-| `eldora-backend` | ☁️ AI backend & API | 🔗 |
-
-<br/>
-
-*"Stay safe. Stay connected. Stay supported."*
-
-<br/>
 
 [![Hackathon](https://img.shields.io/badge/Passage%20to%20ASEAN%202026-Semi--Finalist-FFD21E?style=for-the-badge)](https://github.com/)
 [![BINUS](https://img.shields.io/badge/BINUS%20University-BM%20Team-E7352C?style=for-the-badge)](https://binus.ac.id/)
 
 <br/>
 Made with 🤍 by **BINUS BM Team** 🔥
+</div>
 
-</div
