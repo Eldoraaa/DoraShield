@@ -15,7 +15,7 @@
 
 **ESP32 firmware for the ELDORA DoraShield — a wearable fall-detection device that continuously monitors acceleration, detects strong impact events, and triggers an immediate local buzzer alert to protect elderly users.**
 
-[🌐 ELDORA Ecosystem](https://github.com/eldora-bm) · [🤖 DoraBot](https://github.com/eldora-bm/dorabot) · [📱 ELDORA App](https://github.com/eldora-bm/eldora-app)
+[🌐 ELDORA Ecosystem](https://github.com/Eldoraaa) · [🤖 DoraBot](https://github.com/Eldoraaa/dorabot) · [📱 ELDORA App](https://github.com/Eldoraaa/eldora-mobile)
 
 </div>
 
@@ -252,7 +252,7 @@ Install via Arduino Library Manager (`Sketch → Include Library → Manage Libr
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/eldora-bm/dorashield.git
+git clone https://github.com/Eldoraaa/dorashield.git
 cd dorashield
 
 # 2. Open FallDetection.ino in Arduino IDE
