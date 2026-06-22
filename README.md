@@ -50,22 +50,7 @@ ELDORA Ecosystem
 └── 📱  ELDORA App    — Caregiver dashboard (XGBoost + SHAP, Isolation Forest)
 ```
 
-```mermaid
-flowchart LR
-    A[👴 Elderly User\nwears DoraShield] -->|IMU Data| B[🛡️ DoraShield\nESP32]
-    B -->|Fall Detected| C[🔔 Buzzer Alert\nImmediate Local]
-    B -->|Event Signal| D[☁️ ELDORA Backend]
-    D -->|Push Notification| E[📱 Caregiver App]
-    E -->|Caregiver Response| D
-    D -->|Dispatch| F[🤖 DoraBot\nVoice Check-in]
-
-    style A fill:#f0fdf4,stroke:#86efac
-    style B fill:#fef2f2,stroke:#fca5a5
-    style C fill:#fff7ed,stroke:#fdba74
-    style D fill:#fef3c7,stroke:#fcd34d
-    style E fill:#fdf2f8,stroke:#f0abfc
-    style F fill:#eff6ff,stroke:#93c5fd
-```
+<img src="./images/dorashield-flowchart.png"/>
 
 ---
 
@@ -138,27 +123,7 @@ DoraShield's firmware is intentionally minimal and self-contained. The entire de
 
 ## ⚙️ How DoraShield Works
 
-```mermaid
-sequenceDiagram
-    participant M as 🔵 MPU6050
-    participant E as 🛡️ ESP32
-    participant B as 🔔 Buzzer
-    participant S as 🖥️ Serial Monitor
-
-    E->>M: Initialize over I2C (setup)
-    loop Every loop() cycle
-        E->>M: Request accelerometer data
-        M-->>E: ax, ay, az (m/s²)
-        E->>E: Compute √(ax²+ ay²+ az²)
-        alt totalAccel > 15.0
-            E->>B: digitalWrite HIGH → ALARM ON
-            E->>S: Print "FALL DETECTED"
-        else totalAccel ≤ 15.0
-            E->>B: digitalWrite LOW → ALARM OFF
-            E->>S: Print sensor readings
-        end
-    end
-```
+<img src="./images/dorashield-sequence.png"/>
 
 **In plain English:**
 ```
